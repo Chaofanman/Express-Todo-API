@@ -24,7 +24,22 @@ app.get('/', (req, res) => {
 });
 
 app.get('/todos', (req, res) => {
-	res.json(todos);
+	var queryParams = req.query;
+	var filteredTodos = todos;
+
+	if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
+		filteredTodos = _.where(todos, {completed: true});
+	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+		filteredTodos = _.where(todos, {completed: false});
+	}
+
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0){
+		filteredTodos = _.filter(filteredTodos, (todo) => {
+			return todo.description.indexOf(queryParams.q) > -1;
+		})
+	}
+
+	res.json(filteredTodos);
 });
 
 app.get('/todos/:id', (req, res) => {
