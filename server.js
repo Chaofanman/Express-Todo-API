@@ -13,8 +13,29 @@ var todos = [{
 
 app.get('/', (req, res) => {
 	res.send('Todo API Root');
+});
+
+app.get('/todos', (req, res) => {
+	res.json(todos);
+});
+
+app.get('/todos/:id', (req, res) => {
+	var todoId = parseInt(req.params.id, 10);
+	var matchedTodo;
+
+	todos.forEach((todo) => {
+		if (todoId === todo.id){
+			matchedTodo = todo;
+		}
+	});
+
+	if (matchedTodo) {
+		res.json(matchedTodo);
+	} else {
+		res.err(404).send();
+	}
 })
 
 app.listen(PORT, () => {
 	console.log(`Express listeninng on port ${PORT}`)
-})
+});
