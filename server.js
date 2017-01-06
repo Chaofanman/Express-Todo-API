@@ -1,6 +1,10 @@
 var express = require('express');
+var bodyParser = require('body-parser');
+
+
 var app = express();
 var PORT = process.env.PORT || 3000;
+
 var todos = [{
 	id: 1,
 	description: 'Start todo api',
@@ -10,6 +14,10 @@ var todos = [{
 	description: 'Commit to github',
 	completed: false
 }];
+
+var globalTodoId = 3;
+
+app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
 	res.send('Todo API Root');
@@ -34,6 +42,13 @@ app.get('/todos/:id', (req, res) => {
 	} else {
 		res.err(404).send();
 	}
+})
+
+app.post('/todos', (req, res) => {
+	var newTodo = req.body;
+	newTodo.id = globalTodoId++;
+	todos.push(newTodo);
+	res.json(newTodo);
 })
 
 app.listen(PORT, () => {
