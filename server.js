@@ -39,14 +39,18 @@ app.get('/todos/:id', (req, res) => {
 });
 
 app.post('/todos', (req, res) => {
-	var body = req.body;
+	var body = _.pick(req.body, 'description', 'completed');
 
 	if (!_.isBoolean(body.completed) || !_.isString(body.description) ||  body.description.trim().length === 0){
 		return res.status(400).send();
 	}
 
 	body.id = globalTodoId++;
+
+	body.description = body.description.trim();
+
 	todos.push(body);
+	
 	res.json(body);
 });
 
