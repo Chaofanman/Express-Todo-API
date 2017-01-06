@@ -1,6 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
-
+var _ = require('underscore');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -29,27 +29,26 @@ app.get('/todos', (req, res) => {
 
 app.get('/todos/:id', (req, res) => {
 	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo;
-
-	todos.forEach((todo) => {
-		if (todoId === todo.id){
-			matchedTodo = todo;
-		}
-	});
+	var matchedTodo = _.findWhere(todos, {id: todoId});
 
 	if (matchedTodo) {
 		res.json(matchedTodo);
 	} else {
 		res.err(404).send();
 	}
-})
+});
 
 app.post('/todos', (req, res) => {
-	var newTodo = req.body;
-	newTodo.id = globalTodoId++;
-	todos.push(newTodo);
-	res.json(newTodo);
-})
+	var body = req.body;
+
+	if (!_.isBoolean(body.completed) || !_.isString(body.description) ||  body.description.trim().length === 0){
+		return res.status(400).send();
+	}
+
+	body.id = globalTodoId++;
+	todos.push(body);
+	res.json(body);
+});
 
 app.listen(PORT, () => {
 	console.log(`Express listeninng on port ${PORT}`)
