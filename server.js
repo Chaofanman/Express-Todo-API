@@ -34,7 +34,9 @@ app.get('/todos/:id', (req, res) => {
 	if (matchedTodo) {
 		res.json(matchedTodo);
 	} else {
-		res.err(404).send();
+		return res.status(404).json({
+			"error": "Todo with id " + todoId + " was not found"
+		})
 	}
 });
 
@@ -42,7 +44,9 @@ app.post('/todos', (req, res) => {
 	var body = _.pick(req.body, 'description', 'completed');
 
 	if (!_.isBoolean(body.completed) || !_.isString(body.description) ||  body.description.trim().length === 0){
-		return res.status(400).send();
+		return res.status(400).json({
+			"error": "Error in data input"
+		});
 	}
 
 	body.id = globalTodoId++;
@@ -52,6 +56,53 @@ app.post('/todos', (req, res) => {
 	todos.push(body);
 	
 	res.json(body);
+});
+
+app.delete('/todos/:id', (req, res) => {
+	var todoId = parseInt(req.params.id, 10);
+	var todoToDelete = _.findWhere(todos, {id: todoId});
+
+	if (!todoToDelete){
+		return res.status(400).json({
+			"error": "Todo with id " + todoId + " was not found" 
+		});
+	} else {
+		todos = _.without(todos, todoToDelete);
+		res.json(todoToDelete);
+	}	
+});
+
+app.put('/todos/:id', (req, res) => {
+	var todoId = parseInt(req.params.id, 10);
+	var matchedTodo = _.findWhere(todos, {id: todoId});	
+	var body = _.pick(req.body, 'description', 'completed');
+	var validAttributes = {};
+
+	if (!matchedTodo) {
+		return res.status(404).json({
+			"error": "Todo with id " + todoId + " was not found"
+		})
+	}
+
+	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+		validAttributes.completed = body.completed;
+	} else if (body.hasOwnProperty('completed')) {
+		return res.status(400).json({
+			error: "Completed attribute error"
+		});
+	} 
+
+	if (body.hasOwnProperty('description') && _.isString(body.description) &&  body.description.trim().length > 0) {
+		validAttributes.description = body.description;
+	} else if (body.hasOwnProperty('description')){
+		return res.status(400).json({
+			error: "Description attribute error"
+		});
+	}
+
+	_.extend(matchedTodo, validAttributes);
+
+	res.json(matchedTodo);
 });
 
 app.listen(PORT, () => {
