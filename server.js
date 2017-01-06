@@ -65,9 +65,7 @@ app.post('/todos', (req, res) => {
 	}
 
 	body.id = globalTodoId++;
-
 	body.description = body.description.trim();
-
 	todos.push(body);
 	
 	res.json(body);
