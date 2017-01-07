@@ -59,17 +59,24 @@ app.get('/todos/:id', (req, res) => {
 app.post('/todos', (req, res) => {
 	var body = _.pick(req.body, 'description', 'completed');
 
-	if (!_.isBoolean(body.completed) || !_.isString(body.description) ||  body.description.trim().length === 0){
-		return res.status(400).json({
-			"error": "Error in data input"
+	db.todo.create(body)
+		.then((todo) => {
+			res.json(todo.toJSON()); 
+		}, (error) => {
+			res.status(400).json(error);
 		});
-	}
 
-	body.id = globalTodoId++;
-	body.description = body.description.trim();
-	todos.push(body);
+	// if (!_.isBoolean(body.completed) || !_.isString(body.description) ||  body.description.trim().length === 0){
+	// 	return res.status(400).json({
+	// 		"error": "Error in data input"
+	// 	});
+	// }
+
+	// body.id = globalTodoId++;
+	// body.description = body.description.trim();
+	// todos.push(body);
 	
-	res.json(body);
+	// res.json(body);
 });
 
 app.delete('/todos/:id', (req, res) => {
