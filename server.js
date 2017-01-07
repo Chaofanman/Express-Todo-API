@@ -6,18 +6,6 @@ var db = require('./db.js');
 var app = express();
 var PORT = process.env.PORT || 3000;
 
-var todos = [{
-	id: 1,
-	description: 'Start todo api',
-	completed: true,
-}, {
-	id: 2,
-	description: 'Commit to github',
-	completed: false
-}];
-
-var globalTodoId = 3;
-
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
@@ -25,35 +13,44 @@ app.get('/', (req, res) => {
 });
 
 app.get('/todos', (req, res) => {
-	var queryParams = req.query;
-	var filteredTodos = todos;
+	var query = req.query;
+	var where = {};
 
-	if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
-		filteredTodos = _.where(todos, {completed: true});
-	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
-		filteredTodos = _.where(todos, {completed: false});
+	if (query.hasOwnProperty('completed') && query.completed === 'true') {
+		where.completed = true;
+	} else if (query.hasOwnProperty('completed') && query.completed === 'false') {
+		where.completed = false;
 	}
 
-	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0){
-		filteredTodos = _.filter(filteredTodos, (todo) => {
-			return todo.description.indexOf(queryParams.q) > -1;
-		})
+	if (query.hasOwnProperty('q') && query.q.length > 0){
+		where.description = {
+			$like: `%${query.q}%`
+		};
 	}
 
-	res.json(filteredTodos);
+	db.todo.findAll({where: where})
+		.then((todos) => {
+			res.json(todos);
+		}, (err) => {
+			return res.status(500).send();	
+		});
 });
 
 app.get('/todos/:id', (req, res) => {
 	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo = _.findWhere(todos, {id: todoId});
-
-	if (matchedTodo) {
-		res.json(matchedTodo);
-	} else {
-		return res.status(404).json({
-			"error": "Todo with id " + todoId + " was not found"
-		})
-	}
+	
+	db.todo.findById(todoId)
+		.then((matchedTodo) => {
+			if (matchedTodo) {
+				res.json(matchedTodo.toJSON());
+			} else {
+				return res.status(404).json({
+					"error": "Todo with id " + todoId + " was not found"
+				})
+			}
+		}, (error) => {
+			return res.status(500).send();
+		});
 });
 
 app.post('/todos', (req, res) => {
@@ -65,18 +62,6 @@ app.post('/todos', (req, res) => {
 		}, (error) => {
 			res.status(400).json(error);
 		});
-
-	// if (!_.isBoolean(body.completed) || !_.isString(body.description) ||  body.description.trim().length === 0){
-	// 	return res.status(400).json({
-	// 		"error": "Error in data input"
-	// 	});
-	// }
-
-	// body.id = globalTodoId++;
-	// body.description = body.description.trim();
-	// todos.push(body);
-	
-	// res.json(body);
 });
 
 app.delete('/todos/:id', (req, res) => {
