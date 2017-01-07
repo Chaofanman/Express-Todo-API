@@ -122,6 +122,18 @@ app.put('/todos/:id', (req, res) => {
 		});
 });
 
+app.post('/users', (req, res) => {
+	var body = _.pick(req.body, 'email', 'password');
+
+	db.user.create(body)
+		.then((user) => {
+			res.json(user.toJSON());
+		})
+		.catch((err) => {
+			res.status(400).json(err);
+		})
+});
+
 db.sequelize.sync()
 	.then(() => {
 		app.listen(PORT, () => {
