@@ -1,6 +1,8 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+
+
 var db = require('./db.js');
 
 var app = express();
@@ -127,7 +129,7 @@ app.post('/users', (req, res) => {
 
 	db.user.create(body)
 		.then((user) => {
-			res.json(user.toJSON());
+			res.json(user.toPublicJSON());
 		})
 		.catch((err) => {
 			res.status(400).json(err);
