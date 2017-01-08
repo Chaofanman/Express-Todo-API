@@ -158,21 +158,34 @@ app.post('/users', (req, res) => {
 
 app.post('/users/login', (req, res) => {
 	var body = _.pick(req.body, 'email', 'password');
+	var userInstance;
 
 	db.user.authenticate(body)
 		.then((user) => {
 			var token = user.generateToken('authenticate');
+			userInstance = user;
 
-			if (!token) {
-				res.status(401).send();
-			}
-
-			res.header('Auth', token).json(user.toPublicJSON());
+			return db.token.create({
+				token: token
+			});
+		})
+		.then((tokenInstance) => {
+			res.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());
 		})
 		.catch((err) => {
 			res.status(401).send();
 		})
 })
+
+app.delete('/users/login', middleware.requireAuthentication, (req, res) => {
+	req.token.destroy()
+		.then(() => {
+			res.status(204).send();
+		})
+		.catch(() => {
+			res.status(500).send();
+		})
+});
 
 db.sequelize.sync({force: true})
 	.then(() => {
