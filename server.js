@@ -63,11 +63,17 @@ app.post('/todos', middleware.requireAuthentication, (req, res) => {
 
 	db.todo.create(body)
 		.then((todo) => {
-			res.json(todo.toJSON()); 
-		})
-		.catch((err) => {
-			res.status(400).json(err);
-		});
+			req.user.addTodo(todo)
+				.then(() => {
+					return todo.reload();
+				})
+				.then(() =>  {
+					res.json(todo.toJSON());
+				});
+			})
+			.catch((err) => {
+				res.status(400).json(err);
+			});
 });
 
 app.delete('/todos/:id', middleware.requireAuthentication, (req, res) => {
