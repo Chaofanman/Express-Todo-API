@@ -139,27 +139,12 @@ app.post('/users', (req, res) => {
 app.post('/users/login', (req, res) => {
 	var body = _.pick(req.body, 'email', 'password');
 
-	if (typeof req.body.email !== 'string' || typeof req.body.password !== 'string'){
-		res.status(400).json({
-			"error": "email or password has an invalid input"
-		});
-	}
-
-	db.user.findOne({
-		where: {
-			email: body.email}
-		})
+	db.user.authenticate(body)
 		.then((user) => {
-			if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
-				return res.status(401).send();
-			}
-
 			res.json(user.toPublicJSON());
 		})
-		.catch((error) => {
-			res.status(400).json({
-				"error": "Did not find email " + body.email
-			});
+		.catch((err) => {
+			res.status(401).send();
 		})
 })
 
